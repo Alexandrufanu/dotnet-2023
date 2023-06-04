@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO.MemoryMappedFiles;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -14,6 +15,60 @@ namespace Mapster.Common.MemoryMappedTypes;
 /// <returns></returns>
 public delegate bool MapFeatureDelegate(MapFeatureData featureData);
 
+
+/* The `PropData` enum is defining a set of properties that can be associated with a map feature in the
+`DataFile` class. Each property is assigned a unique integer value starting from 0. By using integers 
+instead of string, we save computing power */
+public enum PropData
+{
+    Water = 0,
+    Amenity = 1,
+    Waterway = 2,
+    Name = 3,
+    Leisure = 4,
+    Natural = 5,
+    Place = 6,
+    Boundary = 7,
+    Building = 8,
+    Highway = 9,
+    Landuse = 10,
+    Railway = 11,
+    Admin_level = 12,
+    Unknown = 13,
+}
+
+
+public enum PropValue{
+
+    Highway = 0,
+    Water = 1,
+    Forest = 2,
+    Orchard = 3,
+    Residential = 4,
+    Cemetery = 5,
+    Industrial = 6,
+    Commercial = 7,
+    Square = 8,
+    Construction = 9,
+    Military = 10,
+    Quarry = 11,
+    Brownfield = 12,
+    Farm = 13,
+    Meadow = 14,
+    Grass = 15,
+    Greenfield = 16,
+    RecreationGround = 17,
+    WinterSports = 18,
+    Allotments = 19,
+    Reservoir = 20,
+    Basin = 21,
+    Building = 22,
+    Leisure = 23,
+ }
+
+
+
+
 /// <summary>
 ///     Aggregation of all the data needed to render a map feature
 /// </summary>
@@ -24,7 +79,7 @@ public readonly ref struct MapFeatureData
     public GeometryType Type { get; init; }
     public ReadOnlySpan<char> Label { get; init; }
     public ReadOnlySpan<Coordinate> Coordinates { get; init; }
-    public Dictionary<string, string> Properties { get; init; }
+    public Dictionary<PropData, string> Properties { get; init; }
 }
 
 /// <summary>
@@ -150,7 +205,35 @@ public unsafe class DataFile : IDisposable
             return;
         }
 
-        var tiles = TiligSystem.GetTilesForBoundingBox(b.MinLat, b.MinLon, b.MaxLat, b.MaxLon);
+        Dictionary<string, int> Map = new Dictionary<string, int>
+            {
+                { "Highway", 0 },
+                { "Water", 1 },
+                { "Forest", 2 },
+                { "Orchard", 3 },
+                { "Residential", 4 },
+                { "Cemetery", 5 },
+                { "Industrial", 6 },
+                { "Commercial", 7 },
+                { "Square", 8 },
+                { "Construction", 9 },
+                { "Military", 10 },
+                { "Quarry", 11 },
+                { "Brownfield", 12 },
+                { "Farm", 13 },
+                { "Meadow", 14 },
+                { "Grass", 15 },
+                { "Greenfield", 16 },
+                { "RecreationGround", 17 },
+                { "WinterSports", 18 },
+                { "Allotments", 19 },
+                { "Reservoir", 20 },
+                { "Basin", 21 },
+                { "Building", 22 },
+                { "Leisure", 23 },
+                { "Amenity", 24 }
+            };
+    var tiles = TiligSystem.GetTilesForBoundingBox(b.MinLat, b.MinLon, b.MaxLat, b.MaxLon);
         for (var i = 0; i < tiles.Length; ++i)
         {
             var header = GetTile(tiles[i]);
@@ -179,13 +262,38 @@ public unsafe class DataFile : IDisposable
                     GetString(header.Tile.Value.StringsOffsetInBytes, header.Tile.Value.CharactersOffsetInBytes, feature->LabelOffset, out label);
                 }
 
+
+
                 if (isFeatureInBBox)
                 {
-                    var properties = new Dictionary<string, string>(feature->PropertyCount);
+                    var properties = new Dictionary<PropData, string>(feature->PropertyCount);
                     for (var p = 0; p < feature->PropertyCount; ++p)
                     {
                         GetProperty(header.Tile.Value.StringsOffsetInBytes, header.Tile.Value.CharactersOffsetInBytes, p * 2 + feature->PropertiesOffset, out var key, out var value);
-                        properties.Add(key.ToString(), value.ToString());
+
+/*                        properties.Add(key.ToString(), value.ToString());*/
+
+                        string[] Objects = new[] { "highway", "water", "boundary", "admin_level", "place", "railway", "natural", "landuse", "building", "leisure", "amenity", "name", "waterway", "water_point" };
+
+                        
+                        try
+                        {
+
+                            PropData keyEnum = (PropData)Enum.Parse( typeof(PropData), key.ToString());
+                            properties.Add(keyEnum, value.ToString());
+                        }
+                        catch (Exception e)
+                        {
+                            Debug.WriteLine("ERROR:", "unknown key: ", key.ToString());
+
+
+                            /*properties.Add(PropData.Unknown, value.ToString());
+*/
+                            continue;
+                        }
+                        
+                        
+
                     }
 
                     if (!action(new MapFeatureData

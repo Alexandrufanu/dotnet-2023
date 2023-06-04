@@ -2,7 +2,15 @@
   "profiles": {
     "Service": {
       "commandName": "Project",
-      "commandLineArgs": "--input \"../../Tests/TestTileRenderer/MapData/andorra-10032022.bin\"",
+      "commandLineArgs": "--input ../../Tests/TestTileRenderer/MapData/andorra-10032022.bin\"",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "http://localhost:50541"
+    },
+    "Profile 1": {
+      "commandName": "Project",
       "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
