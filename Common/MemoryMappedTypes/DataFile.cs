@@ -271,10 +271,6 @@ public unsafe class DataFile : IDisposable
                     {
                         GetProperty(header.Tile.Value.StringsOffsetInBytes, header.Tile.Value.CharactersOffsetInBytes, p * 2 + feature->PropertiesOffset, out var key, out var value);
 
-/*                        properties.Add(key.ToString(), value.ToString());*/
-
-                        string[] Objects = new[] { "highway", "water", "boundary", "admin_level", "place", "railway", "natural", "landuse", "building", "leisure", "amenity", "name", "waterway", "water_point" };
-
                         
                         try
                         {
